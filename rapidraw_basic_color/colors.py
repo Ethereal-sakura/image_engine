@@ -230,8 +230,8 @@ def apply_color_grading(rgb: np.ndarray, grading: ColorGrading) -> np.ndarray:
             np.ones_like(luma),
             np.ones_like(luma),
         ]))
-        graded += (tint_rgb - 0.5) * (grading.shadows.saturation / 500.0) * shadow_mask[..., None] * strengths["shadow_sat"]
-    graded += (grading.shadows.luminance / 500.0) * shadow_mask[..., None] * strengths["shadow_lum"]
+        graded += (tint_rgb - 0.5) * grading.shadows.saturation * shadow_mask[..., None] * strengths["shadow_sat"]
+    graded += grading.shadows.luminance * shadow_mask[..., None] * strengths["shadow_lum"]
 
     if grading.midtones.saturation > 1e-3:
         tint_rgb = hsv_to_rgb(np.dstack([
@@ -239,8 +239,8 @@ def apply_color_grading(rgb: np.ndarray, grading: ColorGrading) -> np.ndarray:
             np.ones_like(luma),
             np.ones_like(luma),
         ]))
-        graded += (tint_rgb - 0.5) * (grading.midtones.saturation / 500.0) * midtone_mask[..., None] * strengths["midtone_sat"]
-    graded += (grading.midtones.luminance / 500.0) * midtone_mask[..., None] * strengths["midtone_lum"]
+        graded += (tint_rgb - 0.5) * grading.midtones.saturation * midtone_mask[..., None] * strengths["midtone_sat"]
+    graded += grading.midtones.luminance * midtone_mask[..., None] * strengths["midtone_lum"]
 
     if grading.highlights.saturation > 1e-3:
         tint_rgb = hsv_to_rgb(np.dstack([
@@ -248,8 +248,8 @@ def apply_color_grading(rgb: np.ndarray, grading: ColorGrading) -> np.ndarray:
             np.ones_like(luma),
             np.ones_like(luma),
         ]))
-        graded += (tint_rgb - 0.5) * (grading.highlights.saturation / 500.0) * highlight_mask[..., None] * strengths["highlight_sat"]
-    graded += (grading.highlights.luminance / 500.0) * highlight_mask[..., None] * strengths["highlight_lum"]
+        graded += (tint_rgb - 0.5) * grading.highlights.saturation * highlight_mask[..., None] * strengths["highlight_sat"]
+    graded += grading.highlights.luminance * highlight_mask[..., None] * strengths["highlight_lum"]
 
     return graded.astype(np.float32)
 
