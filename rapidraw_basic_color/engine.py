@@ -16,7 +16,6 @@ from .basic import (
 )
 from .colors import (
     agx_full_transform,
-    apply_color_calibration,
     apply_color_grading,
     apply_creative_color,
     apply_hsl_mixer,
@@ -25,7 +24,7 @@ from .colors import (
     srgb_to_linear,
 )
 from .io import load_image, save_image
-from .params import BasicColorParams, ColorCalibration, ColorGrading, HslSettings
+from .params import BasicColorParams, ColorGrading, HslSettings
 
 
 @dataclass
@@ -100,18 +99,6 @@ class BasicColorRenderer:
         }
         return ColorGrading.from_dict(data)
 
-    def _normalize_calibration(self, calibration: ColorCalibration) -> ColorCalibration:
-        data = {
-            "shadowsTint": calibration.shadows_tint / SCALES["color_calibration_hue"],
-            "redHue": calibration.red_hue / SCALES["color_calibration_hue"],
-            "redSaturation": calibration.red_saturation / SCALES["color_calibration_saturation"],
-            "greenHue": calibration.green_hue / SCALES["color_calibration_hue"],
-            "greenSaturation": calibration.green_saturation / SCALES["color_calibration_saturation"],
-            "blueHue": calibration.blue_hue / SCALES["color_calibration_hue"],
-            "blueSaturation": calibration.blue_saturation / SCALES["color_calibration_saturation"],
-        }
-        return ColorCalibration.from_dict(data)
-
     def render_array(self, image_srgb_or_linear: np.ndarray, params: BasicColorParams, *, debug: bool = False) -> RenderOutput:
         recorder = StageRecorder() if debug else None
         if params.input_color_space == "linear":
@@ -142,7 +129,6 @@ class BasicColorRenderer:
         if recorder:
             recorder.add_linear("02_after_basic", working)
 
-        working = apply_color_calibration(working, self._normalize_calibration(params.color_calibration))
         working = apply_hsl_mixer(working, self._normalize_hsl(params.hsl))
         working = apply_color_grading(working, self._normalize_grading(params.color_grading))
         working = apply_creative_color(working, float(norm["saturation"]), float(norm["vibrance"]))

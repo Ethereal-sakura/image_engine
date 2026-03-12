@@ -88,30 +88,6 @@ class ColorGrading:
 
 
 @dataclass
-class ColorCalibration:
-    shadows_tint: float = 0.0
-    red_hue: float = 0.0
-    red_saturation: float = 0.0
-    green_hue: float = 0.0
-    green_saturation: float = 0.0
-    blue_hue: float = 0.0
-    blue_saturation: float = 0.0
-
-    @staticmethod
-    def from_dict(data: Optional[Dict[str, Any]]) -> "ColorCalibration":
-        data = data or {}
-        return ColorCalibration(
-            shadows_tint=float(data.get("shadowsTint", data.get("shadows_tint", 0.0))),
-            red_hue=float(data.get("redHue", data.get("red_hue", 0.0))),
-            red_saturation=float(data.get("redSaturation", data.get("red_saturation", 0.0))),
-            green_hue=float(data.get("greenHue", data.get("green_hue", 0.0))),
-            green_saturation=float(data.get("greenSaturation", data.get("green_saturation", 0.0))),
-            blue_hue=float(data.get("blueHue", data.get("blue_hue", 0.0))),
-            blue_saturation=float(data.get("blueSaturation", data.get("blue_saturation", 0.0))),
-        )
-
-
-@dataclass
 class BasicColorParams:
     input_color_space: str = "srgb"
     tone_mapper: str = "basic"
@@ -132,7 +108,6 @@ class BasicColorParams:
     vibrance: float = 0.0
     hsl: HslSettings = field(default_factory=HslSettings)
     color_grading: ColorGrading = field(default_factory=ColorGrading)
-    color_calibration: ColorCalibration = field(default_factory=ColorCalibration)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "BasicColorParams":
@@ -153,7 +128,6 @@ class BasicColorParams:
             vibrance=float(data.get("vibrance", 0.0)),
             hsl=HslSettings.from_dict(data.get("hsl")),
             color_grading=ColorGrading.from_dict(data.get("colorGrading", data.get("color_grading"))),
-            color_calibration=ColorCalibration.from_dict(data.get("colorCalibration", data.get("color_calibration"))),
         )
 
     @classmethod

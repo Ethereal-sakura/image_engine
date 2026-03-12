@@ -32,15 +32,5 @@
     "highlights": { "hue": 48, "saturation": 14, "luminance": 3 },
     "blending": 55,
     "balance": 8
-  },
-
-  "colorCalibration": {
-    "shadowsTint": 4,
-    "redHue": 0,
-    "redSaturation": 4,
-    "greenHue": -2,
-    "greenSaturation": 2,
-    "blueHue": 2,
-    "blueSaturation": 6
   }
 }

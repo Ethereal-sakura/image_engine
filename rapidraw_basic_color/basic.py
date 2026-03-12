@@ -21,8 +21,6 @@ SCALES = {
     "color_grading_saturation": 500.0,
     "color_grading_luminance": 500.0,
     "color_grading_balance": 200.0,
-    "color_calibration_hue": 400.0,
-    "color_calibration_saturation": 120.0,
     "hsl_hue_multiplier": 0.3,
     "hsl_saturation": 100.0,
     "hsl_luminance": 100.0,

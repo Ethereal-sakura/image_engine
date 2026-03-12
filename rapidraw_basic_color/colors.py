@@ -6,7 +6,7 @@ from typing import Dict
 
 import numpy as np
 
-from .params import ColorCalibration, ColorGrading, HSL_BAND_NAMES, HslSettings
+from .params import ColorGrading, HSL_BAND_NAMES, HslSettings
 
 
 LUMA_COEFF = np.array([0.2126, 0.7152, 0.0722], dtype=np.float32)
@@ -148,40 +148,6 @@ def apply_creative_color(rgb: np.ndarray, saturation: float, vibrance: float) ->
     gray = np.repeat(get_luma(out)[..., None], 3, axis=-1)
     return mix(gray, out, (1.0 + amount)[..., None])
 
-
-
-def apply_color_calibration(rgb: np.ndarray, calibration: ColorCalibration) -> np.ndarray:
-    rgb = rgb.astype(np.float32)
-    h_r = calibration.red_hue
-    h_g = calibration.green_hue
-    h_b = calibration.blue_hue
-
-    r_prime = np.array([1.0 - abs(h_r), max(0.0, h_r), max(0.0, -h_r)], dtype=np.float32)
-    g_prime = np.array([max(0.0, -h_g), 1.0 - abs(h_g), max(0.0, h_g)], dtype=np.float32)
-    b_prime = np.array([max(0.0, h_b), max(0.0, -h_b), 1.0 - abs(h_b)], dtype=np.float32)
-    hue_matrix = np.stack([r_prime, g_prime, b_prime], axis=0)
-    c = rgb @ hue_matrix.T
-
-    luma = get_luma(np.maximum(c, 0.0))
-    desat = np.repeat(luma[..., None], 3, axis=-1)
-    sat_vec = c - desat
-
-    color_sum = np.sum(c, axis=-1, keepdims=True)
-    masks = np.where(color_sum > 1e-3, c / np.maximum(color_sum, 1e-3), 0.0)
-    total_sat = (
-        masks[..., 0] * calibration.red_saturation
-        + masks[..., 1] * calibration.green_saturation
-        + masks[..., 2] * calibration.blue_saturation
-    )
-    c = c + sat_vec * total_sat[..., None]
-
-    st = calibration.shadows_tint
-    if abs(st) > 1e-8:
-        shadow_luma = get_luma(np.maximum(c, 0.0))
-        mask = 1.0 - smoothstep(0.0, 0.3, shadow_luma)
-        tint_mult = np.array([1.0 + st * 0.25, 1.0 - st * 0.25, 1.0 + st * 0.25], dtype=np.float32)
-        c = mix(c, c * tint_mult, mask[..., None])
-    return c.astype(np.float32)
 
 
 

@@ -32,7 +32,6 @@
 - Vibrance
 - HSL Mixer（8 色带）
 - Color Grading（Shadows / Midtones / Highlights）
-- Color Calibration
 
 ---
 
@@ -134,7 +133,6 @@ python3 main_basic_color.py \
   "vibrance": 16,
   "hsl": { "...": "..." },
   "colorGrading": { "...": "..." },
-  "colorCalibration": { "...": "..." }
 }
 ```
 
