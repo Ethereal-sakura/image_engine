@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 import json
 
 
+# HSL 面板的 8 个色带名称，顺序与 shader.wgsl 中 HSL_RANGES 数组对应
 HSL_BAND_NAMES = [
     "reds",
     "oranges",
@@ -20,6 +21,12 @@ HSL_BAND_NAMES = [
 
 @dataclass
 class HslBand:
+    """单个 HSL 色带的调整值（对应 shader.wgsl 中 HslColor 结构体）。
+    
+    hue: 色相偏移量，UI 单位（归一化前），范围约 -100~100
+    saturation: 饱和度调整量，UI 单位
+    luminance: 明度调整量，UI 单位
+    """
     hue: float = 0.0
     saturation: float = 0.0
     luminance: float = 0.0
@@ -36,6 +43,7 @@ class HslBand:
 
 @dataclass
 class HslSettings:
+    """HSL 面板全部 8 个色带的设置集合（对应 shader.wgsl 中 hsl: array<HslColor, 8>）。"""
     reds: HslBand = field(default_factory=HslBand)
     oranges: HslBand = field(default_factory=HslBand)
     yellows: HslBand = field(default_factory=HslBand)
@@ -53,6 +61,12 @@ class HslSettings:
 
 @dataclass
 class ColorGradeBand:
+    """单个色调分级区域（暗部/中间调/高光）的设置（对应 shader.wgsl 中 ColorGradeSettings 结构体）。
+    
+    hue: 色相角度，0~360 度
+    saturation: 饱和度强度，UI 单位（归一化前）
+    luminance: 亮度偏移量，UI 单位（归一化前）
+    """
     hue: float = 0.0
     saturation: float = 0.0
     luminance: float = 0.0
@@ -69,6 +83,12 @@ class ColorGradeBand:
 
 @dataclass
 class ColorGrading:
+    """色调分级面板完整设置（对应 shader.wgsl 中 color_grading_* 系列字段）。
+    
+    shadows/midtones/highlights: 三个色调区域的 HSL 设置
+    blending: 区域边界羽化程度，UI 单位 0~100，归一化后除以 100
+    balance: 暗部/高光区域平衡，UI 单位 -100~100，归一化后除以 200
+    """
     shadows: ColorGradeBand = field(default_factory=ColorGradeBand)
     midtones: ColorGradeBand = field(default_factory=ColorGradeBand)
     highlights: ColorGradeBand = field(default_factory=ColorGradeBand)
@@ -89,28 +109,37 @@ class ColorGrading:
 
 @dataclass
 class BasicColorParams:
+    """Basic + Color 面板的完整参数集合（对应 shader.wgsl GlobalAdjustments 中 Basic/Color 相关字段）。
+    
+    所有数值均为 UI 原始单位，engine.py 中的 _normalize_* 方法负责将其除以对应 SCALES 后
+    传给各处理函数，与 Rust 端 image_processing.rs 中的 SCALES 常量保持一致。
+    """
+
+    # 输入色彩空间："srgb" 或 "linear"
     input_color_space: str = "srgb"
+    # 色调映射器："basic"（linear_to_srgb）或 "agx"（AgX 色调映射）
     tone_mapper: str = "basic"
 
-    # Basic panel
-    exposure: float = 0.0
-    brightness: float = 0.0
-    contrast: float = 0.0
-    highlights: float = 0.0
-    shadows: float = 0.0
-    whites: float = 0.0
-    blacks: float = 0.0
+    # Basic 面板
+    exposure: float = 0.0      # 曝光，UI 单位，SCALE=0.8
+    brightness: float = 0.0    # 亮度（filmic），UI 单位，SCALE=0.8
+    contrast: float = 0.0      # 对比度，UI 单位，SCALE=100
+    highlights: float = 0.0    # 高光，UI 单位，SCALE=120
+    shadows: float = 0.0       # 阴影，UI 单位，SCALE=120
+    whites: float = 0.0        # 白色，UI 单位，SCALE=30
+    blacks: float = 0.0        # 黑色，UI 单位，SCALE=70
 
-    # Color panel
-    temperature: float = 0.0
-    tint: float = 0.0
-    saturation: float = 0.0
-    vibrance: float = 0.0
+    # Color 面板
+    temperature: float = 0.0   # 色温，UI 单位，SCALE=25
+    tint: float = 0.0          # 色调，UI 单位，SCALE=100
+    saturation: float = 0.0    # 饱和度，UI 单位，SCALE=100
+    vibrance: float = 0.0      # 自然饱和度，UI 单位，SCALE=100
     hsl: HslSettings = field(default_factory=HslSettings)
     color_grading: ColorGrading = field(default_factory=ColorGrading)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "BasicColorParams":
+        """从 JSON 字典构造参数对象，同时兼容 camelCase（前端格式）和 snake_case 两种键名。"""
         data = dict(data or {})
         return cls(
             input_color_space=str(data.get("inputColorSpace", data.get("input_color_space", "srgb"))).lower(),
@@ -132,6 +161,7 @@ class BasicColorParams:
 
     @classmethod
     def from_json_file(cls, path: str | Path) -> "BasicColorParams":
+        """从 JSON 文件加载参数，文件格式见 examples/params.basic_color.json。"""
         with open(path, "r", encoding="utf-8") as f:
             payload = json.load(f)
         return cls.from_dict(payload)
